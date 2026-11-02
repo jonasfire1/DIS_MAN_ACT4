@@ -8,6 +8,6 @@ message Message {
 }
 
 
-service Node {
+service RicartArgawala {
     rpc request (Message) returns (Message);
 }

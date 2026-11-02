@@ -19,101 +19,101 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Node_Request_FullMethodName = "/Node/request"
+	RicartArgawala_Request_FullMethodName = "/RicartArgawala/request"
 )
 
-// NodeClient is the client API for Node service.
+// RicartArgawalaClient is the client API for RicartArgawala service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type NodeClient interface {
+type RicartArgawalaClient interface {
 	Request(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
-type nodeClient struct {
+type ricartArgawalaClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewNodeClient(cc grpc.ClientConnInterface) NodeClient {
-	return &nodeClient{cc}
+func NewRicartArgawalaClient(cc grpc.ClientConnInterface) RicartArgawalaClient {
+	return &ricartArgawalaClient{cc}
 }
 
-func (c *nodeClient) Request(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+func (c *ricartArgawalaClient) Request(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Message)
-	err := c.cc.Invoke(ctx, Node_Request_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, RicartArgawala_Request_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// NodeServer is the server API for Node service.
-// All implementations must embed UnimplementedNodeServer
+// RicartArgawalaServer is the server API for RicartArgawala service.
+// All implementations must embed UnimplementedRicartArgawalaServer
 // for forward compatibility.
-type NodeServer interface {
+type RicartArgawalaServer interface {
 	Request(context.Context, *Message) (*Message, error)
-	mustEmbedUnimplementedNodeServer()
+	mustEmbedUnimplementedRicartArgawalaServer()
 }
 
-// UnimplementedNodeServer must be embedded to have
+// UnimplementedRicartArgawalaServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedNodeServer struct{}
+type UnimplementedRicartArgawalaServer struct{}
 
-func (UnimplementedNodeServer) Request(context.Context, *Message) (*Message, error) {
+func (UnimplementedRicartArgawalaServer) Request(context.Context, *Message) (*Message, error) {
 	return nil, status.Error(codes.Unimplemented, "method Request not implemented")
 }
-func (UnimplementedNodeServer) mustEmbedUnimplementedNodeServer() {}
-func (UnimplementedNodeServer) testEmbeddedByValue()              {}
+func (UnimplementedRicartArgawalaServer) mustEmbedUnimplementedRicartArgawalaServer() {}
+func (UnimplementedRicartArgawalaServer) testEmbeddedByValue()                        {}
 
-// UnsafeNodeServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to NodeServer will
+// UnsafeRicartArgawalaServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RicartArgawalaServer will
 // result in compilation errors.
-type UnsafeNodeServer interface {
-	mustEmbedUnimplementedNodeServer()
+type UnsafeRicartArgawalaServer interface {
+	mustEmbedUnimplementedRicartArgawalaServer()
 }
 
-func RegisterNodeServer(s grpc.ServiceRegistrar, srv NodeServer) {
-	// If the following call panics, it indicates UnimplementedNodeServer was
+func RegisterRicartArgawalaServer(s grpc.ServiceRegistrar, srv RicartArgawalaServer) {
+	// If the following call panics, it indicates UnimplementedRicartArgawalaServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&Node_ServiceDesc, srv)
+	s.RegisterService(&RicartArgawala_ServiceDesc, srv)
 }
 
-func _Node_Request_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _RicartArgawala_Request_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeServer).Request(ctx, in)
+		return srv.(RicartArgawalaServer).Request(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Node_Request_FullMethodName,
+		FullMethod: RicartArgawala_Request_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).Request(ctx, req.(*Message))
+		return srv.(RicartArgawalaServer).Request(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Node_ServiceDesc is the grpc.ServiceDesc for Node service.
+// RicartArgawala_ServiceDesc is the grpc.ServiceDesc for RicartArgawala service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Node_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Node",
-	HandlerType: (*NodeServer)(nil),
+var RicartArgawala_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "RicartArgawala",
+	HandlerType: (*RicartArgawalaServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "request",
-			Handler:    _Node_Request_Handler,
+			Handler:    _RicartArgawala_Request_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -82,8 +82,8 @@ const file_grpc_proto_proto_rawDesc = "" +
 	"\x05clock\x18\x01 \x01(\x05R\x05clock\x12\x1e\n" +
 	"\n" +
 	"identifier\x18\x02 \x01(\tR\n" +
-	"identifier2%\n" +
-	"\x04Node\x12\x1d\n" +
+	"identifier2/\n" +
+	"\x0eRicartArgawala\x12\x1d\n" +
 	"\arequest\x12\b.Message\x1a\b.MessageB\x14Z\x12handin4/grpc/protob\x06proto3"
 
 var (
@@ -103,8 +103,8 @@ var file_grpc_proto_proto_goTypes = []any{
 	(*Message)(nil), // 0: Message
 }
 var file_grpc_proto_proto_depIdxs = []int32{
-	0, // 0: Node.request:input_type -> Message
-	0, // 1: Node.request:output_type -> Message
+	0, // 0: RicartArgawala.request:input_type -> Message
+	0, // 1: RicartArgawala.request:output_type -> Message
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
