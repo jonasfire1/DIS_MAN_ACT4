@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "handin4/grpc/proto";
+
+
+message Message {
+    int32 clock = 1;
+    string identifier = 2;
+}
+
+
+service Node {
+    rpc post (Message) returns (Message);
+}
