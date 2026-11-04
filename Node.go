@@ -39,7 +39,7 @@ func main() {
 		node_address = ":5050"
 
 		conn2, err := grpc.NewClient(
-			"localhost:????",
+			"localhost:5051",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
@@ -48,7 +48,7 @@ func main() {
 		node.Clients["second_node"] = pb.NewRicartArgawalaClient(conn2)
 
 		conn3, err := grpc.NewClient(
-			"localhost:????",
+			"localhost:5052",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
@@ -58,7 +58,7 @@ func main() {
 
 	case "second_node":
 		node.identifier = "second_node"
-		node_address = ":????"
+		node_address = ":5051"
 
 		conn1, err := grpc.NewClient(
 			"localhost:5050",
@@ -70,7 +70,7 @@ func main() {
 		node.Clients["first_node"] = pb.NewRicartArgawalaClient(conn1)
 
 		conn3, err := grpc.NewClient(
-			"localhost:????",
+			"localhost:5052",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
@@ -79,7 +79,7 @@ func main() {
 		node.Clients["third_node"] = pb.NewRicartArgawalaClient(conn3)
 	case "third_node":
 		node.identifier = "third_node"
-		node_address = ":????"
+		node_address = ":5052"
 
 		conn1, err := grpc.NewClient(
 			"localhost:5050",
@@ -91,7 +91,7 @@ func main() {
 		node.Clients["first_node"] = pb.NewRicartArgawalaClient(conn1)
 
 		conn2, err := grpc.NewClient(
-			"localhost:????",
+			"localhost:5051",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
@@ -117,6 +117,25 @@ func main() {
 		}
 	}()
 
+	// this is supposed to be changed later
+	test_message := &pb.Message{Clock: 0, Identifier: node.identifier}
+	for {
+		var approvals sync.WaitGroup
+		approvals.Add(2) // needs 2 other approval responses
+		for key := range node.Clients {
+			go func() {
+				defer approvals.Done()
+				log.Println("sent message to " + key)
+				test_message, err = node.Clients[key].Request(context.Background(), test_message, grpc.WaitForReady(true))
+				if err != nil {
+					log.Fatalf("Not working")
+				}
+				log.Println("recieved response from " + key)
+			}()
+		}
+		approvals.Wait() // waits for approvals before proceding
+		log.Println("both other nodes responded!")
+	}
 }
 
 func (n *Node) Request(context.Context, *pb.Message) (*pb.Message, error) {
