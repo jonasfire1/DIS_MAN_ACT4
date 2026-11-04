@@ -31,7 +31,6 @@ func main() {
 	node := &Node{
 		Clients: make(map[string]pb.RicartArgawalaClient),
 	}
-
 	var node_address string
 
 	switch os.Args[1] {
@@ -120,6 +119,6 @@ func main() {
 
 }
 
-func Request(context.Context, *pb.Message) (*pb.Message, error) {
-
+func (n *Node) Request(context.Context, *pb.Message) (*pb.Message, error) {
+	return &pb.Message{Clock: 0, Identifier: n.identifier}, nil
 }
