@@ -20,6 +20,8 @@ type Node struct {
 	Mutex      sync.Mutex
 	Clients    map[string]pb.RicartArgawalaClient
 	identifier string
+	State      string
+	Clinthol   pb.RicartArgawalaClient
 }
 
 func main() {
@@ -126,7 +128,7 @@ func main() {
 			go func() {
 				defer approvals.Done()
 				log.Println("sent message to " + key)
-				test_message, err = node.Clients[key].Request(context.Background(), test_message, grpc.WaitForReady(true))
+				test_message, err = node.Clients[key].RspndRqst(context.Background(), test_message, grpc.WaitForReady(true))
 				if err != nil {
 					log.Fatalf("Not working")
 				}
@@ -138,6 +140,39 @@ func main() {
 	}
 }
 
-func (n *Node) Request(context.Context, *pb.Message) (*pb.Message, error) {
-	return &pb.Message{Clock: 0, Identifier: n.identifier}, nil
+func (n *Node) RspndRqst(ctx context.Context, msg *pb.Message) (*pb.Message, error) { //respond to request to get object
+	if msg.GetState() == "WANTED" {
+		if n.State == "HELD" {
+			//Clienhol := msg.GetIdentifier()
+			return &pb.Message{Clock: 0, Identifier: n.identifier, State: "WANTED"}, nil
+		} else if n.State == "RELEASED" {
+			return &pb.Message{Clock: 0, Identifier: n.identifier, State: "WANTED"}, nil
+		}
+
+	}
+	return nil, nil
+
+}
+
+func (n *Node) Request(ctx context.Context) { //request to gain object
+	n.State = "WANTED"
+	msg := &pb.Message{
+		Clock:      n.Clock,
+		Identifier: n.identifier,
+		State:      "WANTED",
+	}
+
+	for id, client := range n.Clients {
+		response, err := client.RspndRqst(
+			context.Background(),
+			msg,
+		)
+		if err != nil {
+			log.Println("failed to send to", id)
+			continue
+		}
+		log.Println("received response from", id)
+		log.Println(response.State)
+	}
+	return
 }
