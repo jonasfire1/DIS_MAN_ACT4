@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"os"
+	"time"
 
 	pb "handin4/gRPC"
 	"log"
@@ -15,13 +16,13 @@ import (
 
 type Node struct {
 	pb.UnimplementedRicartArgawalaServer
-
 	Clock      int32
 	Mutex      sync.Mutex
 	Clients    map[string]pb.RicartArgawalaClient
 	identifier string
 	State      string
 	Deferred   map[string]bool
+	Replies    map[string]bool
 }
 
 func main() {
@@ -143,15 +144,6 @@ func main() {
 
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
 	//remake this to have reply code
-	if msg.GetState() != "WANTED" {
-		return nil, nil
-	}
-	if n.State == "HELD" {
-		n.Defered[msg.Identifier] = msg
-	} else if n.State == "RELEASED" {
-		return &pb.Message{Clock: 0, Identifier: n.identifier}, nil
-	}
-
 	return nil, nil
 }
 
@@ -166,6 +158,7 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 		} //new message
 		requester.Reply(ctx, &MSG)
 	}
+	return nil, nil
 }
 
 func (n *Node) Access(ctx context.Context) {
@@ -176,31 +169,21 @@ func (n *Node) Access(ctx context.Context) {
 		Identifier: n.identifier,
 		State:      "WANTED",
 	}
+	n.Replies = make(map[string]bool)
+	for _, client := range n.Clients {
+		client.Request(ctx, msg)
+	}
+	for {
+		n.Mutex.Lock()
+		repliesnum := len(n.Replies)
+		n.Mutex.Unlock()
 
-	var wg sync.WaitGroup
-
-	for id, client := range n.Clients {
-		wg.Add(1)
-
-		go func(id string, client pb.RicartArgawalaClient) {
-			defer wg.Done()
-
-			_, err := client.Request(
-				context.Background(),
-				msg,
-			)
-			if err != nil {
-				log.Println("failed to send to", id)
-				return
-			}
-
-			log.Println("received response from", id)
-
-		}(id, client)
+		if repliesnum == len(n.Clients) {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 
-	// Wait until ALL goroutines have finished
-	wg.Wait()
-
 	log.Println("all nodes responded")
+	n.State = "HELD"
 }
