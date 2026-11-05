@@ -21,7 +21,7 @@ type Node struct {
 	Clients    map[string]pb.RicartArgawalaClient
 	identifier string
 	State      string
-	Clinthol   pb.RicartArgawalaClient
+	Deferred   map[string]bool
 }
 
 func main() {
@@ -31,7 +31,8 @@ func main() {
 	}
 
 	node := &Node{
-		Clients: make(map[string]pb.RicartArgawalaClient),
+		Clients:  make(map[string]pb.RicartArgawalaClient),
+		Deferred: make(map[string]bool),
 	}
 	var node_address string
 
@@ -128,7 +129,7 @@ func main() {
 			go func() {
 				defer approvals.Done()
 				log.Println("sent message to " + key)
-				test_message, err = node.Clients[key].RspndRqst(context.Background(), test_message, grpc.WaitForReady(true))
+				test_message, err = node.Clients[key].Request(context.Background(), test_message, grpc.WaitForReady(true))
 				if err != nil {
 					log.Fatalf("Not working")
 				}
@@ -140,39 +141,66 @@ func main() {
 	}
 }
 
-func (n *Node) RspndRqst(ctx context.Context, msg *pb.Message) (*pb.Message, error) { //respond to request to get object
-	if msg.GetState() == "WANTED" {
-		if n.State == "HELD" {
-			//Clienhol := msg.GetIdentifier()
-			return &pb.Message{Clock: 0, Identifier: n.identifier, State: "WANTED"}, nil
-		} else if n.State == "RELEASED" {
-			return &pb.Message{Clock: 0, Identifier: n.identifier, State: "WANTED"}, nil
-		}
-
+func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
+	//remake this to have reply code
+	if msg.GetState() != "WANTED" {
+		return nil, nil
 	}
-	return nil, nil
+	if n.State == "HELD" {
+		n.Defered[msg.Identifier] = msg
+	} else if n.State == "RELEASED" {
+		return &pb.Message{Clock: 0, Identifier: n.identifier}, nil
+	}
 
+	return nil, nil
 }
 
-func (n *Node) Request(ctx context.Context) { //request to gain object
+func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //request this from another node
+	if n.State == "WANTED" || n.State == "RELEASED" {
+		n.Deferred[msg.Identifier] = true
+	} else {
+		requester := n.Clients[msg.GetIdentifier()]
+		MSG := pb.Message{
+			Clock:      n.Clock,
+			Identifier: n.identifier,
+		} //new message
+		requester.Reply(ctx, &MSG)
+	}
+}
+
+func (n *Node) Access(ctx context.Context) {
 	n.State = "WANTED"
+
 	msg := &pb.Message{
 		Clock:      n.Clock,
 		Identifier: n.identifier,
 		State:      "WANTED",
 	}
 
+	var wg sync.WaitGroup
+
 	for id, client := range n.Clients {
-		response, err := client.RspndRqst(
-			context.Background(),
-			msg,
-		)
-		if err != nil {
-			log.Println("failed to send to", id)
-			continue
-		}
-		log.Println("received response from", id)
-		log.Println(response.State)
+		wg.Add(1)
+
+		go func(id string, client pb.RicartArgawalaClient) {
+			defer wg.Done()
+
+			_, err := client.Request(
+				context.Background(),
+				msg,
+			)
+			if err != nil {
+				log.Println("failed to send to", id)
+				return
+			}
+
+			log.Println("received response from", id)
+
+		}(id, client)
 	}
-	return
+
+	// Wait until ALL goroutines have finished
+	wg.Wait()
+
+	log.Println("all nodes responded")
 }

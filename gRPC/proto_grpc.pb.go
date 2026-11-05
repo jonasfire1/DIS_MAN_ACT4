@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RicartArgawala_RspndRqst_FullMethodName = "/RicartArgawala/RspndRqst"
+	RicartArgawala_Request_FullMethodName = "/RicartArgawala/Request"
+	RicartArgawala_Reply_FullMethodName   = "/RicartArgawala/Reply"
 )
 
 // RicartArgawalaClient is the client API for RicartArgawala service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RicartArgawalaClient interface {
-	RspndRqst(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	Request(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error)
+	Reply(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type ricartArgawalaClient struct {
@@ -37,10 +39,20 @@ func NewRicartArgawalaClient(cc grpc.ClientConnInterface) RicartArgawalaClient {
 	return &ricartArgawalaClient{cc}
 }
 
-func (c *ricartArgawalaClient) RspndRqst(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+func (c *ricartArgawalaClient) Request(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Message)
-	err := c.cc.Invoke(ctx, RicartArgawala_RspndRqst_FullMethodName, in, out, cOpts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, RicartArgawala_Request_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ricartArgawalaClient) Reply(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, RicartArgawala_Reply_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +63,8 @@ func (c *ricartArgawalaClient) RspndRqst(ctx context.Context, in *Message, opts 
 // All implementations must embed UnimplementedRicartArgawalaServer
 // for forward compatibility.
 type RicartArgawalaServer interface {
-	RspndRqst(context.Context, *Message) (*Message, error)
+	Request(context.Context, *Message) (*Empty, error)
+	Reply(context.Context, *Message) (*Empty, error)
 	mustEmbedUnimplementedRicartArgawalaServer()
 }
 
@@ -62,8 +75,11 @@ type RicartArgawalaServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRicartArgawalaServer struct{}
 
-func (UnimplementedRicartArgawalaServer) RspndRqst(context.Context, *Message) (*Message, error) {
-	return nil, status.Error(codes.Unimplemented, "method RspndRqst not implemented")
+func (UnimplementedRicartArgawalaServer) Request(context.Context, *Message) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method Request not implemented")
+}
+func (UnimplementedRicartArgawalaServer) Reply(context.Context, *Message) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method Reply not implemented")
 }
 func (UnimplementedRicartArgawalaServer) mustEmbedUnimplementedRicartArgawalaServer() {}
 func (UnimplementedRicartArgawalaServer) testEmbeddedByValue()                        {}
@@ -86,20 +102,38 @@ func RegisterRicartArgawalaServer(s grpc.ServiceRegistrar, srv RicartArgawalaSer
 	s.RegisterService(&RicartArgawala_ServiceDesc, srv)
 }
 
-func _RicartArgawala_RspndRqst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _RicartArgawala_Request_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Message)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RicartArgawalaServer).RspndRqst(ctx, in)
+		return srv.(RicartArgawalaServer).Request(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RicartArgawala_RspndRqst_FullMethodName,
+		FullMethod: RicartArgawala_Request_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RicartArgawalaServer).RspndRqst(ctx, req.(*Message))
+		return srv.(RicartArgawalaServer).Request(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RicartArgawala_Reply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RicartArgawalaServer).Reply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RicartArgawala_Reply_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RicartArgawalaServer).Reply(ctx, req.(*Message))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +146,12 @@ var RicartArgawala_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*RicartArgawalaServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RspndRqst",
-			Handler:    _RicartArgawala_RspndRqst_Handler,
+			MethodName: "Request",
+			Handler:    _RicartArgawala_Request_Handler,
+		},
+		{
+			MethodName: "Reply",
+			Handler:    _RicartArgawala_Reply_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

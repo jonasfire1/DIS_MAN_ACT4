@@ -26,7 +26,6 @@ type Message struct {
 	Clock         int32                  `protobuf:"varint,1,opt,name=clock,proto3" json:"clock,omitempty"`
 	Identifier    string                 `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
 	State         string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
-	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -82,27 +81,57 @@ func (x *Message) GetState() string {
 	return ""
 }
 
-func (x *Message) GetType() string {
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_gRPC_proto_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_gRPC_proto_proto_msgTypes[1]
 	if x != nil {
-		return x.Type
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
 	}
-	return ""
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_gRPC_proto_proto_rawDescGZIP(), []int{1}
 }
 
 var File_gRPC_proto_proto protoreflect.FileDescriptor
 
 const file_gRPC_proto_proto_rawDesc = "" +
 	"\n" +
-	"\x10gRPC/proto.proto\"i\n" +
+	"\x10gRPC/proto.proto\"U\n" +
 	"\aMessage\x12\x14\n" +
 	"\x05clock\x18\x01 \x01(\x05R\x05clock\x12\x1e\n" +
 	"\n" +
 	"identifier\x18\x02 \x01(\tR\n" +
 	"identifier\x12\x14\n" +
-	"\x05state\x18\x03 \x01(\tR\x05state\x12\x12\n" +
-	"\x04type\x18\x04 \x01(\tR\x04type21\n" +
-	"\x0eRicartArgawala\x12\x1f\n" +
-	"\tRspndRqst\x12\b.Message\x1a\b.MessageB\x14Z\x12handin4/grpc/protob\x06proto3"
+	"\x05state\x18\x03 \x01(\tR\x05state\"\a\n" +
+	"\x05Empty2H\n" +
+	"\x0eRicartArgawala\x12\x1b\n" +
+	"\aRequest\x12\b.Message\x1a\x06.Empty\x12\x19\n" +
+	"\x05Reply\x12\b.Message\x1a\x06.EmptyB\x14Z\x12handin4/grpc/protob\x06proto3"
 
 var (
 	file_gRPC_proto_proto_rawDescOnce sync.Once
@@ -116,15 +145,18 @@ func file_gRPC_proto_proto_rawDescGZIP() []byte {
 	return file_gRPC_proto_proto_rawDescData
 }
 
-var file_gRPC_proto_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_gRPC_proto_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_gRPC_proto_proto_goTypes = []any{
 	(*Message)(nil), // 0: Message
+	(*Empty)(nil),   // 1: Empty
 }
 var file_gRPC_proto_proto_depIdxs = []int32{
-	0, // 0: RicartArgawala.RspndRqst:input_type -> Message
-	0, // 1: RicartArgawala.RspndRqst:output_type -> Message
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: RicartArgawala.Request:input_type -> Message
+	0, // 1: RicartArgawala.Reply:input_type -> Message
+	1, // 2: RicartArgawala.Request:output_type -> Empty
+	1, // 3: RicartArgawala.Reply:output_type -> Empty
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -141,7 +173,7 @@ func file_gRPC_proto_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gRPC_proto_proto_rawDesc), len(file_gRPC_proto_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
