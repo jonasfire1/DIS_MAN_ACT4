@@ -142,6 +142,20 @@ func main() {
 	}
 }
 
+func (n *Node) main() { // call this with a goroutine
+	ctx := context.Background()
+	for {
+		n.Access(ctx)
+		n.Work()
+	}
+}
+
+func (n *Node) Work() {
+	log.Println("accessed critical section")
+	n.State = "RELEASED"
+	log.Println("releasing critical section")
+}
+
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
 	n.Mutex.Lock()
 	n.Replies[msg.GetIdentifier()] = true
