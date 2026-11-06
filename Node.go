@@ -129,16 +129,16 @@ func main() {
 			_, err := client.Request(context.Background(), nil)
 			if err == nil {
 				cli_num++
-				break
+				continue
 			}
 
 			log.Println("Node down, retrying...")
 			time.Sleep(time.Second)
 		}
-		if cli_num == len(node.Clients)-1 {
+		if cli_num == len(node.Clients) {
 			break
 		}
-		log.Println("not enough users")
+		log.Println("not enough nodes")
 		cli_num = 0
 	}
 	log.Println("running main")
