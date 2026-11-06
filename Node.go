@@ -142,7 +142,7 @@ func main() {
 	}
 }
 
-func (n *Node) main() { // call this with a goroutine
+func (n *Node) main() { // call this with a Node
 	ctx := context.Background()
 	for {
 		n.Access(ctx)
@@ -152,11 +152,13 @@ func (n *Node) main() { // call this with a goroutine
 
 func (n *Node) Work() {
 	log.Println("accessed critical section")
+	n.Clock++
 	n.State = "RELEASED"
 	log.Println("releasing critical section")
 }
 
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
+	n.Clock = max(n.Clock, msg.GetClock()) + 1
 	n.Mutex.Lock()
 	n.Replies[msg.GetIdentifier()] = true
 	n.Mutex.Unlock()
@@ -165,6 +167,7 @@ func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { 
 }
 
 func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //request this from another node
+	n.Clock = max(n.Clock, msg.GetClock()) + 1
 	requester := n.Clients[msg.GetIdentifier()]
 	MSG := pb.Message{
 		Clock:      n.Clock,
@@ -190,6 +193,7 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 }
 
 func (n *Node) Access(ctx context.Context) {
+	n.Clock++
 	n.State = "WANTED"
 
 	msg := &pb.Message{
