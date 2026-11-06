@@ -23,6 +23,7 @@ type Node struct {
 	State      string
 	Deferred   map[string]*pb.Message
 	Replies    map[string]bool
+	wg         sync.WaitGroup
 }
 
 func main() {
@@ -134,27 +135,47 @@ func main() {
 			log.Println("Node down, retrying...")
 			time.Sleep(time.Second)
 		}
-		if cli_num == len(node.Clients) {
+		if cli_num == len(node.Clients)-1 {
 			break
 		}
+		log.Println("not enough users")
 		cli_num = 0
 	}
+	log.Println("running main")
 	node.main()
 }
 
 func (n *Node) main() { // call this with a Node
 	ctx := context.Background()
 	for {
-		n.Access(ctx)
-		n.Work()
+		log.Println("running access")
+		go n.Access(ctx)
+		log.Println("running work")
+		n.wg.Add(1)
+		go n.Work(ctx)
+		n.wg.Wait()
+		time.Sleep(time.Second)
 	}
 }
 
-func (n *Node) Work() {
+func (n *Node) Work(ctx context.Context) {
 	log.Println("accessed critical section")
 	n.Clock++
 	n.State = "RELEASED"
 	log.Println("releasing critical section")
+	if len(n.Deferred) != 0 {
+		MSG := pb.Message{
+			Clock:      n.Clock,
+			Identifier: n.identifier,
+		}
+		for _, msghol := range n.Deferred {
+			n.Clients[msghol.GetIdentifier()].Reply(ctx, &MSG)
+			if len(n.Deferred) == 0 {
+				break
+			}
+		}
+	}
+	n.wg.Done()
 }
 
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
@@ -185,17 +206,16 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 		n.Clients[msg.Identifier].Reply(ctx, &MSG)
 
 	case "HELD":
+		n.Mutex.Lock()
 		n.Deferred[msg.Identifier] = msg
+		n.Mutex.Unlock()
 
 	case "WANTED":
 		if n.Clock < msg.Clock || (n.Clock == msg.Clock && n.identifier < msg.Identifier) {
+			n.Mutex.Lock()
 			n.Deferred[msg.Identifier] = msg
+			n.Mutex.Unlock()
 		} else {
-			log.Printf("msg=%+v\n", msg)
-			log.Printf("identifier=%q\n", msg.GetIdentifier())
-			log.Printf("requester nil? %v\n", requester == nil)
-			log.Printf("ctx nil? %v\n", ctx == nil)
-			log.Printf("MSG=%+v\n", MSG)
 			requester.Reply(ctx, &MSG) //failure here but why msg is never nil nor is its vars and ctx isnt nil
 		}
 	}
@@ -217,6 +237,7 @@ func (n *Node) Access(ctx context.Context) {
 	for _, client := range n.Clients {
 		client.Request(ctx, msg)
 	}
+	log.Println("waiting for reply")
 	for {
 		n.Mutex.Lock()
 		repliesnum := len(n.Replies)
