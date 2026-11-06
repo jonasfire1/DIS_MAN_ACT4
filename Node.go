@@ -216,7 +216,7 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 			n.Deferred[msg.Identifier] = msg
 			n.Mutex.Unlock()
 		} else {
-			requester.Reply(ctx, &MSG) //failure here but why msg is never nil nor is its vars and ctx isnt nil
+			requester.Reply(ctx, &MSG)
 		}
 	}
 	return nil, nil
