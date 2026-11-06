@@ -21,7 +21,7 @@ type Node struct {
 	Clients    map[string]pb.RicartArgawalaClient
 	identifier string
 	State      string
-	Deferred   map[string]bool
+	Deferred   map[string]*pb.Message
 	Replies    map[string]bool
 }
 
@@ -33,7 +33,7 @@ func main() {
 
 	node := &Node{
 		Clients:  make(map[string]pb.RicartArgawalaClient),
-		Deferred: make(map[string]bool),
+		Deferred: make(map[string]*pb.Message),
 	}
 	var node_address string
 
@@ -143,20 +143,34 @@ func main() {
 }
 
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
-	//remake this to have reply code
-	return nil, nil
+	n.Mutex.Lock()
+	n.Replies[msg.GetIdentifier()] = true
+	n.Mutex.Unlock()
+
+	return &pb.Empty{}, nil
 }
 
 func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //request this from another node
-	if n.State == "WANTED" || n.State == "RELEASED" {
-		n.Deferred[msg.Identifier] = true
-	} else {
-		requester := n.Clients[msg.GetIdentifier()]
-		MSG := pb.Message{
-			Clock:      n.Clock,
-			Identifier: n.identifier,
-		} //new message
-		requester.Reply(ctx, &MSG)
+	requester := n.Clients[msg.GetIdentifier()]
+	MSG := pb.Message{
+		Clock:      n.Clock,
+		Identifier: n.identifier,
+	} //new message
+	requester.Reply(ctx, &MSG)
+	switch n.State {
+
+	case "RELEASED":
+		n.Clients[msg.Identifier].Reply(ctx, &MSG)
+
+	case "HELD":
+		n.Deferred[msg.Identifier] = msg
+
+	case "WANTED":
+		if n.Clock < msg.Clock || (n.Clock == msg.Clock && n.identifier < msg.Identifier) {
+			n.Deferred[msg.Identifier] = msg
+		} else {
+			requester.Reply(ctx, &MSG)
+		}
 	}
 	return nil, nil
 }
