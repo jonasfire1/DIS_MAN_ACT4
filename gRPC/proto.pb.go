@@ -25,7 +25,6 @@ type Message struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Clock         int32                  `protobuf:"varint,1,opt,name=clock,proto3" json:"clock,omitempty"`
 	Identifier    string                 `protobuf:"bytes,2,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	State         string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -74,13 +73,6 @@ func (x *Message) GetIdentifier() string {
 	return ""
 }
 
-func (x *Message) GetState() string {
-	if x != nil {
-		return x.State
-	}
-	return ""
-}
-
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -121,13 +113,12 @@ var File_gRPC_proto_proto protoreflect.FileDescriptor
 
 const file_gRPC_proto_proto_rawDesc = "" +
 	"\n" +
-	"\x10gRPC/proto.proto\"U\n" +
+	"\x10gRPC/proto.proto\"?\n" +
 	"\aMessage\x12\x14\n" +
 	"\x05clock\x18\x01 \x01(\x05R\x05clock\x12\x1e\n" +
 	"\n" +
 	"identifier\x18\x02 \x01(\tR\n" +
-	"identifier\x12\x14\n" +
-	"\x05state\x18\x03 \x01(\tR\x05state\"\a\n" +
+	"identifier\"\a\n" +
 	"\x05Empty2H\n" +
 	"\x0eRicartArgawala\x12\x1b\n" +
 	"\aRequest\x12\b.Message\x1a\x06.Empty\x12\x19\n" +

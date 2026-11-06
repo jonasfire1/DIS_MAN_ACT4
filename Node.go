@@ -122,24 +122,24 @@ func main() {
 	}()
 
 	// this is supposed to be changed later
-	test_message := &pb.Message{Clock: 0, Identifier: node.identifier}
+	cli_num := 0
 	for {
-		var approvals sync.WaitGroup
-		approvals.Add(2) // needs 2 other approval responses
-		for key := range node.Clients {
-			go func() {
-				defer approvals.Done()
-				log.Println("sent message to " + key)
-				test_message, err = node.Clients[key].Request(context.Background(), test_message, grpc.WaitForReady(true))
-				if err != nil {
-					log.Fatalf("Not working")
-				}
-				log.Println("recieved response from " + key)
-			}()
+		for _, client := range node.Clients {
+			_, err := client.Request(context.Background(), nil)
+			if err == nil {
+				cli_num++
+				break
+			}
+
+			log.Println("Node down, retrying...")
+			time.Sleep(time.Second)
 		}
-		approvals.Wait() // waits for approvals before proceding
-		log.Println("both other nodes responded!")
+		if cli_num == len(node.Clients) {
+			break
+		}
+		cli_num = 0
 	}
+	node.main()
 }
 
 func (n *Node) main() { // call this with a Node
@@ -158,6 +158,9 @@ func (n *Node) Work() {
 }
 
 func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //respond to request use on node that made request
+	if msg == nil || ctx == nil {
+		return nil, nil
+	}
 	n.Clock = max(n.Clock, msg.GetClock()) + 1
 	n.Mutex.Lock()
 	n.Replies[msg.GetIdentifier()] = true
@@ -167,13 +170,15 @@ func (n *Node) Reply(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { 
 }
 
 func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) { //request this from another node
+	if msg == nil || msg.GetIdentifier() == "" || ctx == nil {
+		return nil, nil
+	}
 	n.Clock = max(n.Clock, msg.GetClock()) + 1
 	requester := n.Clients[msg.GetIdentifier()]
 	MSG := pb.Message{
 		Clock:      n.Clock,
 		Identifier: n.identifier,
 	} //new message
-	requester.Reply(ctx, &MSG)
 	switch n.State {
 
 	case "RELEASED":
@@ -186,20 +191,27 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 		if n.Clock < msg.Clock || (n.Clock == msg.Clock && n.identifier < msg.Identifier) {
 			n.Deferred[msg.Identifier] = msg
 		} else {
-			requester.Reply(ctx, &MSG)
+			log.Printf("msg=%+v\n", msg)
+			log.Printf("identifier=%q\n", msg.GetIdentifier())
+			log.Printf("requester nil? %v\n", requester == nil)
+			log.Printf("ctx nil? %v\n", ctx == nil)
+			log.Printf("MSG=%+v\n", MSG)
+			requester.Reply(ctx, &MSG) //failure here but why msg is never nil nor is its vars and ctx isnt nil
 		}
 	}
 	return nil, nil
 }
 
 func (n *Node) Access(ctx context.Context) {
+	if ctx == nil {
+		return
+	}
 	n.Clock++
 	n.State = "WANTED"
 
 	msg := &pb.Message{
 		Clock:      n.Clock,
 		Identifier: n.identifier,
-		State:      "WANTED",
 	}
 	n.Replies = make(map[string]bool)
 	for _, client := range n.Clients {
