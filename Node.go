@@ -159,10 +159,10 @@ func (n *Node) main() { // call this with a Node
 }
 
 func (n *Node) Work(ctx context.Context) {
-	log.Println("accessed critical section")
+	log.Printf("accessed critical section, LogicalTime=%d", n.Clock)
 	n.Clock++
 	n.State = "RELEASED"
-	log.Println("releasing critical section")
+	log.Printf("releasing critical section, LogicalTime=%d", n.Clock)
 	if len(n.Deferred) != 0 {
 		MSG := pb.Message{
 			Clock:      n.Clock,
@@ -195,6 +195,7 @@ func (n *Node) Request(ctx context.Context, msg *pb.Message) (*pb.Empty, error) 
 		return nil, nil
 	}
 	n.Clock = max(n.Clock, msg.GetClock()) + 1
+	log.Printf("recieved request from %s, at LogicalTime=%d", msg.Identifier, n.Clock)
 	requester := n.Clients[msg.GetIdentifier()]
 	MSG := pb.Message{
 		Clock:      n.Clock,
